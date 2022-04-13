@@ -32,7 +32,7 @@ func Start(discord *discordgo.Session) {
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := strings.Replace(m.ContentWithMentionsReplaced(), s.State.Ready.User.Username, "username", 1)
-	parts := strings.Split(strings.ToLower(msg), " ")
+	parts := strings.Split(msg, " ")
 
 	channel, _ := s.State.Channel(m.ChannelID)
 	if channel == nil {
@@ -51,14 +51,14 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}).Warning("Failed to grab guild")
 		return
 	}
-	if parts[0] == "!wttr" || strings.Contains(parts[0], "!wttrp") {
+	if strings.ToLower(parts[0]) == "!wttr" || strings.Contains(strings.ToLower(parts[0]), "!wttrp") {
 		handleWttrQuery(s, m, parts, guild)
 	}
 }
 
 func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild) {
 	if len(parts) > 1 {
-		query := strings.Split(strings.Join(parts[1:], ""), "?")
+		query := strings.Split(strings.Join(parts[1:], "%20"), "?")
 		switch parts[0] {
 		case "!wttr":
 			wttr, err := weather(query[0] + "?format=4")

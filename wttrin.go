@@ -69,7 +69,7 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 				s.ChannelMessageSend(m.ChannelID, err.Error())
 				return
 			}
-			s.ChannelMessageSend(m.ChannelID, string(wttr))
+			s.ChannelMessageSend(m.ChannelID, "`"+string(wttr)+"`")
 		case "!wttrp":
 			var wttr []byte
 			var err error

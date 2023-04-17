@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,6 +56,11 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.ToLower(parts[0]) == "!wttr" || strings.Contains(strings.ToLower(parts[0]), "!wttrp") {
 		handleWttrQuery(s, m, parts, guild)
 	}
+}
+
+func randomNumber() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(32768)
 }
 
 func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild) {
@@ -108,7 +115,9 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 }
 
 func getWeather(baseURL string, location string) (result []byte, err error) {
-	return httpGet(baseURL + location)
+	r := randomNumber()
+	nocache := "&nonce=" + strconv.Itoa(r)
+	return httpGet(baseURL + location + nocache)
 }
 
 func weather(location string) (result []byte, err error) {

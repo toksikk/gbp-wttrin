@@ -1,18 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
+	"encoding/json"
+	"io"
+	"log/slog"
 	"math/rand"
-	"net"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
-	log "github.com/sirupsen/logrus"
 )
 
 var PluginName = "wttrin"
@@ -21,12 +18,125 @@ var PluginBuilddate = ""
 
 const (
 	baseURL   = "https://wttr.in/"
-	baseURLv2 = "https://v2.wttr.in/"
-
-	curlUserAgent = "curl/7.54.0"
+	apiSuffix = "?format=j1"
 )
 
-var _httpClient *http.Client
+type wttrinResponse struct {
+	CurrentCondition []struct {
+		FeelsLikeC       string `json:"FeelsLikeC"`
+		FeelsLikeF       string `json:"FeelsLikeF"`
+		Cloudcover       string `json:"cloudcover"`
+		Humidity         string `json:"humidity"`
+		LocalObsDateTime string `json:"localObsDateTime"`
+		ObservationTime  string `json:"observation_time"`
+		PrecipInches     string `json:"precipInches"`
+		PrecipMM         string `json:"precipMM"`
+		Pressure         string `json:"pressure"`
+		PressureInches   string `json:"pressureInches"`
+		TempC            string `json:"temp_C"`
+		TempF            string `json:"temp_F"`
+		UvIndex          string `json:"uvIndex"`
+		Visibility       string `json:"visibility"`
+		VisibilityMiles  string `json:"visibilityMiles"`
+		WeatherCode      string `json:"weatherCode"`
+		WeatherDesc      []struct {
+			Value string `json:"value"`
+		} `json:"weatherDesc"`
+		WeatherIconURL []struct {
+			Value string `json:"value"`
+		} `json:"weatherIconUrl"`
+		Winddir16Point string `json:"winddir16Point"`
+		WinddirDegree  string `json:"winddirDegree"`
+		WindspeedKmph  string `json:"windspeedKmph"`
+		WindspeedMiles string `json:"windspeedMiles"`
+	} `json:"current_condition"`
+	NearestArea []struct {
+		AreaName []struct {
+			Value string `json:"value"`
+		} `json:"areaName"`
+		Country []struct {
+			Value string `json:"value"`
+		} `json:"country"`
+		Latitude   string `json:"latitude"`
+		Longitude  string `json:"longitude"`
+		Population string `json:"population"`
+		Region     []struct {
+			Value string `json:"value"`
+		} `json:"region"`
+		WeatherURL []struct {
+			Value string `json:"value"`
+		} `json:"weatherUrl"`
+	} `json:"nearest_area"`
+	Request []struct {
+		Query string `json:"query"`
+		Type  string `json:"type"`
+	} `json:"request"`
+	Weather []struct {
+		Astronomy []struct {
+			MoonIllumination string `json:"moon_illumination"`
+			MoonPhase        string `json:"moon_phase"`
+			Moonrise         string `json:"moonrise"`
+			Moonset          string `json:"moonset"`
+			Sunrise          string `json:"sunrise"`
+			Sunset           string `json:"sunset"`
+		} `json:"astronomy"`
+		AvgtempC string `json:"avgtempC"`
+		AvgtempF string `json:"avgtempF"`
+		Date     string `json:"date"`
+		Hourly   []struct {
+			DewPointC        string `json:"DewPointC"`
+			DewPointF        string `json:"DewPointF"`
+			FeelsLikeC       string `json:"FeelsLikeC"`
+			FeelsLikeF       string `json:"FeelsLikeF"`
+			HeatIndexC       string `json:"HeatIndexC"`
+			HeatIndexF       string `json:"HeatIndexF"`
+			WindChillC       string `json:"WindChillC"`
+			WindChillF       string `json:"WindChillF"`
+			WindGustKmph     string `json:"WindGustKmph"`
+			WindGustMiles    string `json:"WindGustMiles"`
+			Chanceoffog      string `json:"chanceoffog"`
+			Chanceoffrost    string `json:"chanceoffrost"`
+			Chanceofhightemp string `json:"chanceofhightemp"`
+			Chanceofovercast string `json:"chanceofovercast"`
+			Chanceofrain     string `json:"chanceofrain"`
+			Chanceofremdry   string `json:"chanceofremdry"`
+			Chanceofsnow     string `json:"chanceofsnow"`
+			Chanceofsunshine string `json:"chanceofsunshine"`
+			Chanceofthunder  string `json:"chanceofthunder"`
+			Chanceofwindy    string `json:"chanceofwindy"`
+			Cloudcover       string `json:"cloudcover"`
+			Humidity         string `json:"humidity"`
+			PrecipInches     string `json:"precipInches"`
+			PrecipMM         string `json:"precipMM"`
+			Pressure         string `json:"pressure"`
+			PressureInches   string `json:"pressureInches"`
+			TempC            string `json:"tempC"`
+			TempF            string `json:"tempF"`
+			Time             string `json:"time"`
+			UvIndex          string `json:"uvIndex"`
+			Visibility       string `json:"visibility"`
+			VisibilityMiles  string `json:"visibilityMiles"`
+			WeatherCode      string `json:"weatherCode"`
+			WeatherDesc      []struct {
+				Value string `json:"value"`
+			} `json:"weatherDesc"`
+			WeatherIconURL []struct {
+				Value string `json:"value"`
+			} `json:"weatherIconUrl"`
+			Winddir16Point string `json:"winddir16Point"`
+			WinddirDegree  string `json:"winddirDegree"`
+			WindspeedKmph  string `json:"windspeedKmph"`
+			WindspeedMiles string `json:"windspeedMiles"`
+		} `json:"hourly"`
+		MaxtempC    string `json:"maxtempC"`
+		MaxtempF    string `json:"maxtempF"`
+		MintempC    string `json:"mintempC"`
+		MintempF    string `json:"mintempF"`
+		SunHour     string `json:"sunHour"`
+		TotalSnowCm string `json:"totalSnow_cm"`
+		UvIndex     string `json:"uvIndex"`
+	} `json:"weather"`
+}
 
 func Start(discord *discordgo.Session) {
 	discord.AddHandler(onMessageCreate)
@@ -36,134 +146,147 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := strings.Replace(m.ContentWithMentionsReplaced(), s.State.Ready.User.Username, "username", 1)
 	parts := strings.Split(msg, " ")
 
-	channel, _ := s.State.Channel(m.ChannelID)
-	if channel == nil {
-		log.WithFields(log.Fields{
-			"channel": m.ChannelID,
-			"message": m.ID,
-		}).Warning("Failed to grab channel")
-		return
-	}
-	guild, _ := s.State.Guild(channel.GuildID)
-	if guild == nil {
-		log.WithFields(log.Fields{
-			"guild":   channel.GuildID,
-			"channel": channel,
-			"message": m.ID,
-		}).Warning("Failed to grab guild")
-		return
-	}
-	if strings.ToLower(parts[0]) == "!wttr" || strings.Contains(strings.ToLower(parts[0]), "!wttrp") {
+	if strings.ToLower(parts[0]) == "!wttr" {
+		channel, err := s.State.Channel(m.ChannelID)
+		if channel == nil {
+			slog.Error("Failed to grab channel", "MessageID", m.ID, "ChannelID", m.ChannelID, "Error", err)
+			return
+		}
+
+		guild, err := s.State.Guild(channel.GuildID)
+		if guild == nil {
+			slog.Error("Failed to grab guild", "MessageID", m.ID, "Channel", channel, "GuildID", channel.GuildID, "Error", err)
+			return
+		}
+
 		handleWttrQuery(s, m, parts, guild)
 	}
 }
 
-func randomNumber() int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(32768)
-}
-
 func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild) {
 	if len(parts) > 1 {
-		query := strings.Split(strings.Join(parts[1:], "%20"), "?")
-		switch parts[0] {
-		case "!wttr":
-			wttr, err := weather(query[0] + "?format=4")
+		location := strings.Join(parts[1:], "+")
+		weatherResult, err := getWeather(location)
+		if err != nil {
+			slog.Error("Failed to get weather", "MessageID", m.ID, "Location", location, "Error", err)
+			discordErrorMessage, err := s.ChannelMessageSend(m.ChannelID, "Failed to get weather for "+location+": "+err.Error())
 			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("wttr.in query failed")
-				s.ChannelMessageSend(m.ChannelID, err.Error())
-				return
+				slog.Error("Failed to send message", "MessageID", discordErrorMessage.ID, "ChannelID", discordErrorMessage.ChannelID, "Error", err)
 			}
-			s.ChannelMessageSend(m.ChannelID, "`"+string(wttr)+"`")
-		case "!wttrp":
-			var wttr []byte
-			var err error
-			if len(query) > 1 {
-				wttr, err = weather(url.QueryEscape(query[0]) + ".png" + "?" + query[1])
-			} else {
-				wttr, err = weather(url.QueryEscape(query[0]) + ".png?0")
-			}
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("wttr.in query failed")
-				s.ChannelMessageSend(m.ChannelID, err.Error())
-				return
-			}
-			s.ChannelFileSend(m.ChannelID, strings.Join(parts, "")+".png", bytes.NewReader(wttr))
-		case "!wttrp2":
-			var wttr []byte
-			var err error
-			if len(query) > 1 {
-				wttr, err = weatherV2(url.QueryEscape(query[0]) + ".png" + "?" + query[1])
-			} else {
-				wttr, err = weatherV2(url.QueryEscape(query[0]) + ".png")
-			}
-			if err != nil {
-				log.WithFields(log.Fields{
-					"error": err,
-				}).Error("wttr.in query failed")
-				s.ChannelMessageSend(m.ChannelID, err.Error())
-				return
-			}
-			s.ChannelFileSend(m.ChannelID, strings.Join(parts, "")+".png", bytes.NewReader(wttr))
+			return
 		}
-
+		resultMessage := buildWeatherString(weatherResult)
+		resultDiscordMessage, err := s.ChannelMessageSend(m.ChannelID, resultMessage)
+		if err != nil {
+			slog.Error("Failed to send message", "MessageID", resultDiscordMessage.ID, "ChannelID", resultDiscordMessage.ChannelID, "Error", err)
+		}
 	}
 }
 
-func getWeather(baseURL string, location string) (result []byte, err error) {
-	r := randomNumber()
-	nocache := "&nonce=" + strconv.Itoa(r)
-	return httpGet(baseURL + location + nocache)
+func buildWeatherString(weatherResult wttrinResponse) (result string) {
+	weatherCodes := map[string]string{
+		"113": "☀️",   // Sunny
+		"116": "⛅",    // Partly Cloudy
+		"119": "☁️",   // Cloudy
+		"122": "☁️",   // Very Cloudy
+		"143": "🌫️",   // Fog
+		"176": "🌦️",   // Light Showers
+		"179": "🌨️",   // Light Sleet Showers
+		"182": "🌨️",   // Light Sleet
+		"185": "🌨️",   // Light Sleet
+		"200": "⛈️",   // Thundery Showers
+		"227": "🌨️",   // Light Snow
+		"230": "❄️",   // Heavy Snow
+		"248": "🌫️",   // Fog
+		"260": "🌫️",   // Fog
+		"263": "🌦️",   // Light Showers
+		"266": "🌧️",   // Light Rain
+		"281": "🌨️",   // Light Sleet
+		"284": "🌨️",   // Light Sleet
+		"293": "🌧️",   // Light Rain
+		"296": "🌧️",   // Light Rain
+		"299": "🌧️",   // Heavy Showers
+		"302": "🌧️",   // Heavy Rain
+		"305": "🌧️",   // Heavy Showers
+		"308": "🌧️",   // Heavy Rain
+		"311": "🌨️",   // Light Sleet
+		"314": "🌨️",   // Light Sleet
+		"317": "🌨️",   // Light Sleet
+		"320": "🌨️",   // Light Snow
+		"323": "🌨️",   // Light Snow Showers
+		"326": "🌨️",   // Light Snow Showers
+		"329": "❄️",   // Heavy Snow
+		"332": "❄️",   // Heavy Snow
+		"335": "❄️",   // Heavy Snow Showers
+		"338": "❄️",   // Heavy Snow
+		"350": "🌨️",   // Light Sleet
+		"353": "🌦️",   // Light Showers
+		"356": "🌧️",   // Heavy Showers
+		"359": "🌧️",   // Heavy Rain
+		"362": "🌨️",   // Light Sleet Showers
+		"365": "🌨️",   // Light Sleet Showers
+		"368": "🌨️",   // Light Snow Showers
+		"371": "❄️",   // Heavy Snow Showers
+		"374": "🌨️",   // Light Sleet Showers
+		"377": "🌨️",   // Light Sleet
+		"386": "⛈️",   // Thundery Showers
+		"389": "⛈️",   // Thundery Heavy Rain
+		"392": "❄️⛈️", // Thundery Snow Showers
+		"395": "❄️",   // Heavy Snow Showers
+	}
+	weatherConditionEmoji := weatherCodes[weatherResult.CurrentCondition[0].WeatherCode]
+	windDirectionEmojis := map[string]string{
+		"N":   "⬆️",
+		"NE":  "↗️",
+		"E":   "➡️",
+		"SE":  "↘️",
+		"S":   "⬇️",
+		"SW":  "↙️",
+		"W":   "⬅️",
+		"NW":  "↖️",
+		"NNE": "⬆️",
+		"ENE": "➡️",
+		"ESE": "➡️",
+		"SSE": "⬇️",
+		"SSW": "⬇️",
+		"WSW": "⬅️",
+		"WNW": "⬅️",
+		"NNW": "⬆️",
+	}
+	windDirectionEmoji := windDirectionEmojis[weatherResult.CurrentCondition[0].Winddir16Point]
+
+	r := "📍" + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " (" + weatherResult.NearestArea[0].Region[0].Value + ")\n" +
+		"🌡️ " + weatherResult.CurrentCondition[0].TempC + "°C (feels like " + weatherResult.CurrentCondition[0].FeelsLikeC + "°C)\n" +
+		"💧 " + weatherResult.CurrentCondition[0].Humidity + "% humidity\n" +
+		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
+		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value
+	return r
 }
 
-func weather(location string) (result []byte, err error) {
-	return getWeather(baseURL, location)
+func getWeather(location string) (weatherResult wttrinResponse, err error) {
+	nocache := "&nonce=" + strconv.Itoa(rand.Intn(32768))
+	queryURL := baseURL + location + apiSuffix + nocache
+	slog.Info("Querying wttr.in", "URL", queryURL)
+	return httpGet(queryURL)
 }
 
-func weatherV2(location string) (result []byte, err error) {
-	return getWeather(baseURLv2, location)
-}
+func httpGet(url string) (weatherResult wttrinResponse, err error) {
+	var resp *http.Response
+	var httpClient = &http.Client{
+		Timeout: 10 * 1000000000,
+	}
+	resp, err = httpClient.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
 
-func httpGet(url string) (result []byte, err error) {
-	if _httpClient == nil {
-		_httpClient = &http.Client{
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout:   10 * time.Second,
-					KeepAlive: 300 * time.Second,
-				}).Dial,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ResponseHeaderTimeout: 10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-			},
-		}
+	var body []byte
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
 	}
 
-	var req *http.Request
-
-	if req, err = http.NewRequest("GET", url, nil); err == nil {
-
-		req.Header.Set("User-Agent", curlUserAgent)
-
-		var resp *http.Response
-		resp, err = _httpClient.Do(req)
-
-		if resp != nil {
-			defer resp.Body.Close() // in case of http redirects
-		}
-
-		if err == nil {
-			var body []byte
-			if body, err = ioutil.ReadAll(resp.Body); err == nil {
-				return body, nil
-			}
-		}
-	}
-
-	return make([]byte, 0), err
+	err = json.Unmarshal(body, &weatherResult)
+	return
 }

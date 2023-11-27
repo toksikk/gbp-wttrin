@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -70,25 +71,6 @@ var weatherCodes = map[string]string{
 	"389": "⛈️",   // Thundery Heavy Rain
 	"392": "❄️⛈️", // Thundery Snow Showers
 	"395": "❄️",   // Heavy Snow Showers
-}
-
-var windDirectionEmojis = map[string]string{
-	"N":   "⬆️",
-	"NE":  "↗️",
-	"E":   "➡️",
-	"SE":  "↘️",
-	"S":   "⬇️",
-	"SW":  "↙️",
-	"W":   "⬅️",
-	"NW":  "↖️",
-	"NNE": "⬆️",
-	"ENE": "➡️",
-	"ESE": "➡️",
-	"SSE": "⬇️",
-	"SSW": "⬇️",
-	"WSW": "⬅️",
-	"WNW": "⬅️",
-	"NNW": "⬆️",
 }
 
 type wttrinResponse struct {
@@ -254,8 +236,39 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 }
 
 func buildWeatherString(weatherResult wttrinResponse) (result string) {
-	weatherConditionEmoji := weatherCodes[weatherResult.CurrentCondition[0].WeatherCode]
-	windDirectionEmoji := windDirectionEmojis[weatherResult.CurrentCondition[0].Winddir16Point]
+	weatherConditionEmoji := "🌈"
+	for code := range weatherCodes {
+		if weatherResult.CurrentCondition[0].WeatherCode == code {
+			weatherConditionEmoji = weatherCodes[code]
+			break
+		}
+	}
+
+	winddirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
+	if err != nil {
+		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
+		return
+	}
+
+	var windDirectionEmoji string
+	if winddirDegree >= 337 && winddirDegree <= 22 {
+		windDirectionEmoji = "⬆️"
+	} else if winddirDegree >= 22 && winddirDegree <= 67 {
+		windDirectionEmoji = "↗️"
+	} else if winddirDegree >= 67 && winddirDegree <= 112 {
+		windDirectionEmoji = "➡️"
+	} else if winddirDegree >= 112 && winddirDegree <= 157 {
+		windDirectionEmoji = "↘️"
+	} else if winddirDegree >= 157 && winddirDegree <= 202 {
+		windDirectionEmoji = "⬇️"
+	} else if winddirDegree >= 202 && winddirDegree <= 247 {
+		windDirectionEmoji = "↙️"
+	} else if winddirDegree >= 247 && winddirDegree <= 292 {
+		windDirectionEmoji = "⬅️"
+	} else if winddirDegree >= 292 && winddirDegree <= 337 {
+		windDirectionEmoji = "↖️"
+	}
+
 	var region string
 	if weatherResult.NearestArea[0].Region[0].Value != "" {
 		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
@@ -279,7 +292,7 @@ func getWeather(location string) (weatherResult wttrinResponse, err error) {
 func httpGet(url string) (weatherResult wttrinResponse, err error) {
 	var resp *http.Response
 	var httpClient = &http.Client{
-		Timeout: 10 * 1000000000,
+		Timeout: 30 * time.Second,
 	}
 	resp, err = httpClient.Get(url)
 	if err != nil {
@@ -296,6 +309,6 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 	}
 
 	err = json.Unmarshal(body, &weatherResult)
-	slog.Info("Got weather", "URL", url, "Response", weatherResult)
+	slog.Debug("Got weather", "URL", url, "Response", weatherResult)
 	return
 }

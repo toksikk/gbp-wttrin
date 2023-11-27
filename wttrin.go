@@ -21,6 +21,76 @@ const (
 	apiSuffix = "?format=j1"
 )
 
+var weatherCodes = map[string]string{
+	"113": "☀️",   // Sunny
+	"116": "⛅",    // Partly Cloudy
+	"119": "☁️",   // Cloudy
+	"122": "☁️",   // Very Cloudy
+	"143": "🌫️",   // Fog
+	"176": "🌦️",   // Light Showers
+	"179": "🌨️",   // Light Sleet Showers
+	"182": "🌨️",   // Light Sleet
+	"185": "🌨️",   // Light Sleet
+	"200": "⛈️",   // Thundery Showers
+	"227": "🌨️",   // Light Snow
+	"230": "❄️",   // Heavy Snow
+	"248": "🌫️",   // Fog
+	"260": "🌫️",   // Fog
+	"263": "🌦️",   // Light Showers
+	"266": "🌧️",   // Light Rain
+	"281": "🌨️",   // Light Sleet
+	"284": "🌨️",   // Light Sleet
+	"293": "🌧️",   // Light Rain
+	"296": "🌧️",   // Light Rain
+	"299": "🌧️",   // Heavy Showers
+	"302": "🌧️",   // Heavy Rain
+	"305": "🌧️",   // Heavy Showers
+	"308": "🌧️",   // Heavy Rain
+	"311": "🌨️",   // Light Sleet
+	"314": "🌨️",   // Light Sleet
+	"317": "🌨️",   // Light Sleet
+	"320": "🌨️",   // Light Snow
+	"323": "🌨️",   // Light Snow Showers
+	"326": "🌨️",   // Light Snow Showers
+	"329": "❄️",   // Heavy Snow
+	"332": "❄️",   // Heavy Snow
+	"335": "❄️",   // Heavy Snow Showers
+	"338": "❄️",   // Heavy Snow
+	"350": "🌨️",   // Light Sleet
+	"353": "🌦️",   // Light Showers
+	"356": "🌧️",   // Heavy Showers
+	"359": "🌧️",   // Heavy Rain
+	"362": "🌨️",   // Light Sleet Showers
+	"365": "🌨️",   // Light Sleet Showers
+	"368": "🌨️",   // Light Snow Showers
+	"371": "❄️",   // Heavy Snow Showers
+	"374": "🌨️",   // Light Sleet Showers
+	"377": "🌨️",   // Light Sleet
+	"386": "⛈️",   // Thundery Showers
+	"389": "⛈️",   // Thundery Heavy Rain
+	"392": "❄️⛈️", // Thundery Snow Showers
+	"395": "❄️",   // Heavy Snow Showers
+}
+
+var windDirectionEmojis = map[string]string{
+	"N":   "⬆️",
+	"NE":  "↗️",
+	"E":   "➡️",
+	"SE":  "↘️",
+	"S":   "⬇️",
+	"SW":  "↙️",
+	"W":   "⬅️",
+	"NW":  "↖️",
+	"NNE": "⬆️",
+	"ENE": "➡️",
+	"ESE": "➡️",
+	"SSE": "⬇️",
+	"SSW": "⬇️",
+	"WSW": "⬅️",
+	"WNW": "⬅️",
+	"NNW": "⬆️",
+}
+
 type wttrinResponse struct {
 	CurrentCondition []struct {
 		FeelsLikeC       string `json:"FeelsLikeC"`
@@ -184,82 +254,18 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 }
 
 func buildWeatherString(weatherResult wttrinResponse) (result string) {
-	weatherCodes := map[string]string{
-		"113": "☀️",   // Sunny
-		"116": "⛅",    // Partly Cloudy
-		"119": "☁️",   // Cloudy
-		"122": "☁️",   // Very Cloudy
-		"143": "🌫️",   // Fog
-		"176": "🌦️",   // Light Showers
-		"179": "🌨️",   // Light Sleet Showers
-		"182": "🌨️",   // Light Sleet
-		"185": "🌨️",   // Light Sleet
-		"200": "⛈️",   // Thundery Showers
-		"227": "🌨️",   // Light Snow
-		"230": "❄️",   // Heavy Snow
-		"248": "🌫️",   // Fog
-		"260": "🌫️",   // Fog
-		"263": "🌦️",   // Light Showers
-		"266": "🌧️",   // Light Rain
-		"281": "🌨️",   // Light Sleet
-		"284": "🌨️",   // Light Sleet
-		"293": "🌧️",   // Light Rain
-		"296": "🌧️",   // Light Rain
-		"299": "🌧️",   // Heavy Showers
-		"302": "🌧️",   // Heavy Rain
-		"305": "🌧️",   // Heavy Showers
-		"308": "🌧️",   // Heavy Rain
-		"311": "🌨️",   // Light Sleet
-		"314": "🌨️",   // Light Sleet
-		"317": "🌨️",   // Light Sleet
-		"320": "🌨️",   // Light Snow
-		"323": "🌨️",   // Light Snow Showers
-		"326": "🌨️",   // Light Snow Showers
-		"329": "❄️",   // Heavy Snow
-		"332": "❄️",   // Heavy Snow
-		"335": "❄️",   // Heavy Snow Showers
-		"338": "❄️",   // Heavy Snow
-		"350": "🌨️",   // Light Sleet
-		"353": "🌦️",   // Light Showers
-		"356": "🌧️",   // Heavy Showers
-		"359": "🌧️",   // Heavy Rain
-		"362": "🌨️",   // Light Sleet Showers
-		"365": "🌨️",   // Light Sleet Showers
-		"368": "🌨️",   // Light Snow Showers
-		"371": "❄️",   // Heavy Snow Showers
-		"374": "🌨️",   // Light Sleet Showers
-		"377": "🌨️",   // Light Sleet
-		"386": "⛈️",   // Thundery Showers
-		"389": "⛈️",   // Thundery Heavy Rain
-		"392": "❄️⛈️", // Thundery Snow Showers
-		"395": "❄️",   // Heavy Snow Showers
-	}
 	weatherConditionEmoji := weatherCodes[weatherResult.CurrentCondition[0].WeatherCode]
-	windDirectionEmojis := map[string]string{
-		"N":   "⬆️",
-		"NE":  "↗️",
-		"E":   "➡️",
-		"SE":  "↘️",
-		"S":   "⬇️",
-		"SW":  "↙️",
-		"W":   "⬅️",
-		"NW":  "↖️",
-		"NNE": "⬆️",
-		"ENE": "➡️",
-		"ESE": "➡️",
-		"SSE": "⬇️",
-		"SSW": "⬇️",
-		"WSW": "⬅️",
-		"WNW": "⬅️",
-		"NNW": "⬆️",
-	}
 	windDirectionEmoji := windDirectionEmojis[weatherResult.CurrentCondition[0].Winddir16Point]
+	var region string
+	if weatherResult.NearestArea[0].Region[0].Value != "" {
+		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
+	}
 
-	r := "📍" + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " (" + weatherResult.NearestArea[0].Region[0].Value + ")\n" +
+	r := "```📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n" +
 		"🌡️ " + weatherResult.CurrentCondition[0].TempC + "°C (feels like " + weatherResult.CurrentCondition[0].FeelsLikeC + "°C)\n" +
 		"💧 " + weatherResult.CurrentCondition[0].Humidity + "% humidity\n" +
 		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
-		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value
+		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "```"
 	return r
 }
 
@@ -277,6 +283,7 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 	}
 	resp, err = httpClient.Get(url)
 	if err != nil {
+		slog.Error("Failed to get weather", "URL", url, "Error", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -284,9 +291,11 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 	var body []byte
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
+		slog.Error("Failed to read response body", "URL", url, "Error", err)
 		return
 	}
 
 	err = json.Unmarshal(body, &weatherResult)
+	slog.Info("Got weather", "URL", url, "Response", weatherResult)
 	return
 }

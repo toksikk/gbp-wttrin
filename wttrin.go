@@ -251,7 +251,7 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	}
 
 	var windDirectionEmoji string
-	if winddirDegree >= 337 && winddirDegree <= 22 {
+	if (winddirDegree >= 337 && winddirDegree <= 360) || (winddirDegree >= 0 && winddirDegree <= 22) {
 		windDirectionEmoji = "⬆️"
 	} else if winddirDegree >= 22 && winddirDegree <= 67 {
 		windDirectionEmoji = "↗️"

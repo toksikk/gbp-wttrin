@@ -244,6 +244,10 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 		}
 	}
 
+	if weatherConditionEmoji == "🌈" {
+		slog.Warn("Unknown weather code", "Code", weatherResult.CurrentCondition[0].WeatherCode)
+	}
+
 	winddirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
 	if err != nil {
 		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)

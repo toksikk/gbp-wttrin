@@ -306,7 +306,7 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusNotFound {
+	if resp.StatusCode == http.StatusNotFound {
 		slog.Info("Could not find requested location", "URL", url, "StatusCode", resp.StatusCode)
 		err = fmt.Errorf(resp.Status)
 		return

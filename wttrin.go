@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"math/rand"
@@ -304,6 +305,12 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 		return
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		slog.Info("Could not find requested location", "URL", url, "StatusCode", resp.StatusCode)
+		err = fmt.Errorf(resp.Status)
+		return
+	}
 
 	var body []byte
 	body, err = io.ReadAll(resp.Body)

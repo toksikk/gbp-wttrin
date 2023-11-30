@@ -1,4 +1,4 @@
-package main
+package gbpwttrin
 
 import (
 	"encoding/json"
@@ -14,9 +14,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// PluginName is the name of the plugin
 var PluginName = "wttrin"
-var PluginVersion = ""
-var PluginBuilddate = ""
 
 const (
 	baseURL   = "https://wttr.in/"
@@ -191,6 +190,7 @@ type wttrinResponse struct {
 	} `json:"weather"`
 }
 
+// Start the plugin
 func Start(discord *discordgo.Session) {
 	discord.AddHandler(onMessageCreate)
 }

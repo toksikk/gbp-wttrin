@@ -23,54 +23,105 @@ const (
 )
 
 var weatherCodes = map[string]string{
-	"113": "☀️",   // Sunny
-	"116": "⛅",    // Partly Cloudy
-	"119": "☁️",   // Cloudy
-	"122": "☁️",   // Very Cloudy
-	"143": "🌫️",   // Fog
-	"176": "🌦️",   // Light Showers
-	"179": "🌨️",   // Light Sleet Showers
-	"182": "🌨️",   // Light Sleet
-	"185": "🌨️",   // Light Sleet
-	"200": "⛈️",   // Thundery Showers
-	"227": "🌨️",   // Light Snow
-	"230": "❄️",   // Heavy Snow
-	"248": "🌫️",   // Fog
-	"260": "🌫️",   // Fog
-	"263": "🌦️",   // Light Showers
-	"266": "🌧️",   // Light Rain
-	"281": "🌨️",   // Light Sleet
-	"284": "🌨️",   // Light Sleet
-	"293": "🌧️",   // Light Rain
-	"296": "🌧️",   // Light Rain
-	"299": "🌧️",   // Heavy Showers
-	"302": "🌧️",   // Heavy Rain
-	"305": "🌧️",   // Heavy Showers
-	"308": "🌧️",   // Heavy Rain
-	"311": "🌨️",   // Light Sleet
-	"314": "🌨️",   // Light Sleet
-	"317": "🌨️",   // Light Sleet
-	"320": "🌨️",   // Light Snow
-	"323": "🌨️",   // Light Snow Showers
-	"326": "🌨️",   // Light Snow Showers
-	"329": "❄️",   // Heavy Snow
-	"332": "❄️",   // Heavy Snow
-	"335": "❄️",   // Heavy Snow Showers
-	"338": "❄️",   // Heavy Snow
-	"350": "🌨️",   // Light Sleet
-	"353": "🌦️",   // Light Showers
-	"356": "🌧️",   // Heavy Showers
-	"359": "🌧️",   // Heavy Rain
-	"362": "🌨️",   // Light Sleet Showers
-	"365": "🌨️",   // Light Sleet Showers
-	"368": "🌨️",   // Light Snow Showers
-	"371": "❄️",   // Heavy Snow Showers
-	"374": "🌨️",   // Light Sleet Showers
-	"377": "🌨️",   // Light Sleet
-	"386": "⛈️",   // Thundery Showers
-	"389": "⛈️",   // Thundery Heavy Rain
-	"392": "❄️⛈️", // Thundery Snow Showers
-	"395": "❄️",   // Heavy Snow Showers
+	"113": "☀️",
+	"116": "⛅",
+	"119": "☁️",
+	"122": "☁️",
+	"143": "🌫️",
+	"176": "🌦️",
+	"179": "🌨️",
+	"182": "🌨️",
+	"185": "🌨️",
+	"200": "⛈️",
+	"227": "🌨️",
+	"230": "❄️",
+	"248": "🌫️",
+	"260": "🌫️",
+	"263": "🌦️",
+	"266": "🌧️",
+	"281": "🌨️",
+	"284": "🌨️",
+	"293": "🌧️",
+	"296": "🌧️",
+	"299": "🌧️",
+	"302": "🌧️",
+	"305": "🌧️",
+	"308": "🌧️",
+	"311": "🌨️",
+	"314": "🌨️",
+	"317": "🌨️",
+	"320": "🌨️",
+	"323": "🌨️",
+	"326": "🌨️",
+	"329": "❄️",
+	"332": "❄️",
+	"335": "❄️",
+	"338": "❄️",
+	"350": "🌨️",
+	"353": "🌦️",
+	"356": "🌧️",
+	"359": "🌧️",
+	"362": "🌨️",
+	"365": "🌨️",
+	"368": "🌨️",
+	"371": "❄️",
+	"374": "🌨️",
+	"377": "🌨️",
+	"386": "⛈️",
+	"389": "⛈️",
+	"392": "❄️⛈️",
+	"395": "❄️",
+}
+
+var weatherDescriptions = map[string]string{
+	"113": "Sunny",
+	"116": "Partly Cloudy",
+	"119": "Cloudy",
+	"122": "Very Cloudy",
+	"143": "Fog",
+	"176": "Light Showers",
+	"179": "Light Sleet Showers",
+	"182": "Light Sleet",
+	"185": "Light Sleet",
+	"200": "Thundery Showers",
+	"227": "Light Snow",
+	"230": "Heavy Snow",
+	"248": "Fog",
+	"260": "Fog",
+	"263": "Light Showers",
+	"266": "Light Rain",
+	"281": "Light Sleet",
+	"284": "Light Sleet",
+	"293": "Light Rain",
+	"296": "Light Rain",
+	"299": "Heavy Showers",
+	"302": "Heavy Rain",
+	"305": "Heavy Showers",
+	"308": "Heavy Rain",
+	"311": "Light Sleet",
+	"314": "Light Sleet",
+	"317": "Light Sleet",
+	"320": "Light Snow",
+	"323": "Light Snow Showers",
+	"326": "Light Snow Showers",
+	"329": "Heavy Snow",
+	"332": "Heavy Snow",
+	"335": "Heavy Snow Showers",
+	"338": "Heavy Snow",
+	"350": "Light Sleet",
+	"353": "Light Showers",
+	"356": "Heavy Showers",
+	"359": "Heavy Rain",
+	"362": "Light Sleet Showers",
+	"365": "Light Sleet Showers",
+	"368": "Light Snow Showers",
+	"371": "Heavy Snow Showers",
+	"374": "Light Sleet Showers",
+	"377": "Light Sleet",
+	"386": "Thundery Showers",
+	"389": "Thundery Heavy Rain",
+	"392": "Thundery Snow Showers",
+	"395": "Heavy Snow Showers",
 }
 
 type wttrinResponse struct {
@@ -303,14 +354,39 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	return r
 }
 
+func mostOccurringWeatherCode(resp wttrinResponse) (mostOccurringCode string) {
+	weatherCodeCounts := make(map[string]int)
+	for _, day := range resp.Weather {
+		for _, hour := range day.Hourly {
+			weatherCodeCounts[hour.WeatherCode]++
+		}
+	}
+
+	maxCount := 0
+	for code, count := range weatherCodeCounts {
+		if count > maxCount {
+			mostOccurringCode = code
+			maxCount = count
+		}
+	}
+
+	return
+}
+
 func buildForecastString(weatherResult wttrinResponse) (result string) {
 	result += "```"
+	var region string
+	if weatherResult.NearestArea[0].Region[0].Value != "" {
+		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
+	}
+	result += "📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n---\n"
 	for i, day := range weatherResult.Weather {
 		if i > 0 {
 			result += "---\n"
 		}
 
-		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
+		weatherCode := mostOccurringWeatherCode(weatherResult)
+		weatherConditionEmoji := getWeatherConditionEmoji(weatherCode)
 
 		avgWindDirDegree := 0
 		for _, hour := range day.Hourly {
@@ -339,7 +415,7 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
 			"🌬️ " + windDirectionEmoji + " " + strconv.Itoa(avgWindspeedKmph) + "km/h\n" +
-			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
+			weatherConditionEmoji + " " + weatherDescriptions[weatherCode] + "\n"
 
 		totalSnow, err := strconv.ParseFloat(day.TotalSnowCm, 32)
 		if err != nil {

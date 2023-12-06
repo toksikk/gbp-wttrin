@@ -212,13 +212,13 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	switch strings.ToLower(parts[0]) {
 	case "!wttr":
-		handleWttrQuery(s, m, parts, guild, 0)
+		handleWttrQuery(s, m, parts, guild, false)
 	case "!wttrf":
-		handleWttrQuery(s, m, parts, guild, 3) // always 3 day forecast for now
+		handleWttrQuery(s, m, parts, guild, true)
 	}
 }
 
-func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild, forecast int) {
+func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild, forecast bool) {
 	if len(parts) > 1 {
 		location := strings.Join(parts[1:], "+")
 		weatherResult, err := getWeather(location)
@@ -232,8 +232,8 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 		}
 
 		var resultMessage string
-		if forecast > 0 {
-			resultMessage = buildForecastString(weatherResult, forecast)
+		if forecast {
+			resultMessage = buildForecastString(weatherResult)
 		} else {
 			resultMessage = buildWeatherString(weatherResult)
 		}
@@ -307,7 +307,7 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	return r
 }
 
-func buildForecastString(weatherResult wttrinResponse, forecastDayCount int) (result string) {
+func buildForecastString(weatherResult wttrinResponse) (result string) {
 	result += "```"
 	for i, day := range weatherResult.Weather {
 		if i > 0 {

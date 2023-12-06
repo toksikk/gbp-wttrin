@@ -266,14 +266,6 @@ func getWindDirectionEmoji(winddirDegree int) (windDirectionEmoji string) {
 	return
 }
 
-func convertStringToInt(s string) (i int, err error) {
-	i, err = strconv.Atoi(s)
-	if err != nil {
-		slog.Error("Failed to convert string to int", "string", s, "Error", err)
-	}
-	return
-}
-
 func getWeatherConditionEmoji(weatherCode string) (weatherConditionEmoji string) {
 	weatherConditionEmoji = "🌈"
 	for code := range weatherCodes {
@@ -291,7 +283,7 @@ func getWeatherConditionEmoji(weatherCode string) (weatherConditionEmoji string)
 
 func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	weatherConditionEmoji := getWeatherConditionEmoji(weatherResult.CurrentCondition[0].WeatherCode)
-	windDirDegree, err := convertStringToInt(weatherResult.CurrentCondition[0].WinddirDegree)
+	windDirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
 	if err != nil {
 		slog.Error("Failed to convert wind direction to integer", "weatherResult.CurrentCondition[0].WinddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
 		return
@@ -319,7 +311,7 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 		}
 		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
 		// TODO: calculate average wind direction for all hours in the day
-		windDirDegree, err := convertStringToInt(weatherResult.CurrentCondition[0].WinddirDegree)
+		windDirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
 		if err != nil {
 			slog.Error("Failed to convert wind direction to integer", "weatherResult.CurrentCondition[0].WinddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
 			return

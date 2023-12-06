@@ -124,6 +124,52 @@ var weatherDescriptions = map[string]string{
 	"395": "Heavy Snow Showers",
 }
 
+type Hourly struct {
+	DewPointC        string `json:"DewPointC"`
+	DewPointF        string `json:"DewPointF"`
+	FeelsLikeC       string `json:"FeelsLikeC"`
+	FeelsLikeF       string `json:"FeelsLikeF"`
+	HeatIndexC       string `json:"HeatIndexC"`
+	HeatIndexF       string `json:"HeatIndexF"`
+	WindChillC       string `json:"WindChillC"`
+	WindChillF       string `json:"WindChillF"`
+	WindGustKmph     string `json:"WindGustKmph"`
+	WindGustMiles    string `json:"WindGustMiles"`
+	Chanceoffog      string `json:"chanceoffog"`
+	Chanceoffrost    string `json:"chanceoffrost"`
+	Chanceofhightemp string `json:"chanceofhightemp"`
+	Chanceofovercast string `json:"chanceofovercast"`
+	Chanceofrain     string `json:"chanceofrain"`
+	Chanceofremdry   string `json:"chanceofremdry"`
+	Chanceofsnow     string `json:"chanceofsnow"`
+	Chanceofsunshine string `json:"chanceofsunshine"`
+	Chanceofthunder  string `json:"chanceofthunder"`
+	Chanceofwindy    string `json:"chanceofwindy"`
+	Cloudcover       string `json:"cloudcover"`
+	Humidity         string `json:"humidity"`
+	PrecipInches     string `json:"precipInches"`
+	PrecipMM         string `json:"precipMM"`
+	Pressure         string `json:"pressure"`
+	PressureInches   string `json:"pressureInches"`
+	TempC            string `json:"tempC"`
+	TempF            string `json:"tempF"`
+	Time             string `json:"time"`
+	UvIndex          string `json:"uvIndex"`
+	Visibility       string `json:"visibility"`
+	VisibilityMiles  string `json:"visibilityMiles"`
+	WeatherCode      string `json:"weatherCode"`
+	WeatherDesc      []struct {
+		Value string `json:"value"`
+	} `json:"weatherDesc"`
+	WeatherIconURL []struct {
+		Value string `json:"value"`
+	} `json:"weatherIconUrl"`
+	Winddir16Point string `json:"winddir16Point"`
+	WinddirDegree  string `json:"winddirDegree"`
+	WindspeedKmph  string `json:"windspeedKmph"`
+	WindspeedMiles string `json:"windspeedMiles"`
+}
+
 type wttrinResponse struct {
 	CurrentCondition []struct {
 		FeelsLikeC       string `json:"FeelsLikeC"`
@@ -183,61 +229,17 @@ type wttrinResponse struct {
 			Sunrise          string `json:"sunrise"`
 			Sunset           string `json:"sunset"`
 		} `json:"astronomy"`
-		AvgtempC string `json:"avgtempC"`
-		AvgtempF string `json:"avgtempF"`
-		Date     string `json:"date"`
-		Hourly   []struct {
-			DewPointC        string `json:"DewPointC"`
-			DewPointF        string `json:"DewPointF"`
-			FeelsLikeC       string `json:"FeelsLikeC"`
-			FeelsLikeF       string `json:"FeelsLikeF"`
-			HeatIndexC       string `json:"HeatIndexC"`
-			HeatIndexF       string `json:"HeatIndexF"`
-			WindChillC       string `json:"WindChillC"`
-			WindChillF       string `json:"WindChillF"`
-			WindGustKmph     string `json:"WindGustKmph"`
-			WindGustMiles    string `json:"WindGustMiles"`
-			Chanceoffog      string `json:"chanceoffog"`
-			Chanceoffrost    string `json:"chanceoffrost"`
-			Chanceofhightemp string `json:"chanceofhightemp"`
-			Chanceofovercast string `json:"chanceofovercast"`
-			Chanceofrain     string `json:"chanceofrain"`
-			Chanceofremdry   string `json:"chanceofremdry"`
-			Chanceofsnow     string `json:"chanceofsnow"`
-			Chanceofsunshine string `json:"chanceofsunshine"`
-			Chanceofthunder  string `json:"chanceofthunder"`
-			Chanceofwindy    string `json:"chanceofwindy"`
-			Cloudcover       string `json:"cloudcover"`
-			Humidity         string `json:"humidity"`
-			PrecipInches     string `json:"precipInches"`
-			PrecipMM         string `json:"precipMM"`
-			Pressure         string `json:"pressure"`
-			PressureInches   string `json:"pressureInches"`
-			TempC            string `json:"tempC"`
-			TempF            string `json:"tempF"`
-			Time             string `json:"time"`
-			UvIndex          string `json:"uvIndex"`
-			Visibility       string `json:"visibility"`
-			VisibilityMiles  string `json:"visibilityMiles"`
-			WeatherCode      string `json:"weatherCode"`
-			WeatherDesc      []struct {
-				Value string `json:"value"`
-			} `json:"weatherDesc"`
-			WeatherIconURL []struct {
-				Value string `json:"value"`
-			} `json:"weatherIconUrl"`
-			Winddir16Point string `json:"winddir16Point"`
-			WinddirDegree  string `json:"winddirDegree"`
-			WindspeedKmph  string `json:"windspeedKmph"`
-			WindspeedMiles string `json:"windspeedMiles"`
-		} `json:"hourly"`
-		MaxtempC    string `json:"maxtempC"`
-		MaxtempF    string `json:"maxtempF"`
-		MintempC    string `json:"mintempC"`
-		MintempF    string `json:"mintempF"`
-		SunHour     string `json:"sunHour"`
-		TotalSnowCm string `json:"totalSnow_cm"`
-		UvIndex     string `json:"uvIndex"`
+		AvgtempC    string   `json:"avgtempC"`
+		AvgtempF    string   `json:"avgtempF"`
+		Date        string   `json:"date"`
+		Hourly      []Hourly `json:"hourly"`
+		MaxtempC    string   `json:"maxtempC"`
+		MaxtempF    string   `json:"maxtempF"`
+		MintempC    string   `json:"mintempC"`
+		MintempF    string   `json:"mintempF"`
+		SunHour     string   `json:"sunHour"`
+		TotalSnowCm string   `json:"totalSnow_cm"`
+		UvIndex     string   `json:"uvIndex"`
 	} `json:"weather"`
 }
 
@@ -350,7 +352,7 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 		"🌡️ " + weatherResult.CurrentCondition[0].TempC + "°C (feels like " + weatherResult.CurrentCondition[0].FeelsLikeC + "°C)\n" +
 		"💧 " + weatherResult.CurrentCondition[0].Humidity + "% humidity\n" +
 		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
-		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "```"
+		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "\n" + checkForHighChances(weatherResult.Weather[0].Hourly) + "```"
 	return r
 }
 
@@ -368,6 +370,102 @@ func mostOccurringWeatherCode(resp wttrinResponse) (mostOccurringCode string) {
 			mostOccurringCode = code
 			maxCount = count
 		}
+	}
+
+	return
+}
+
+func checkForHighChances(hourly []Hourly) (highChances string) {
+	highestChanceOfFog := 0
+	highestChanceOfFrost := 0
+	highestChanceOfHighTemp := 0
+	highestChanceOfRain := 0
+	highestChanceOfSnow := 0
+	highestChanceOfThunder := 0
+	highestChanceOfWindy := 0
+
+	for _, hour := range hourly {
+		chanceoffog, err := strconv.Atoi(hour.Chanceoffog)
+		if err != nil {
+			slog.Error("Failed to convert chanceoffog to integer", "hour.Chanceoffog", hour.Chanceoffog, "Error", err)
+			return
+		}
+		chanceoffrost, err := strconv.Atoi(hour.Chanceoffrost)
+		if err != nil {
+			slog.Error("Failed to convert chanceoffrost to integer", "hour.Chanceoffrost", hour.Chanceoffrost, "Error", err)
+			return
+		}
+		chanceofhightemp, err := strconv.Atoi(hour.Chanceofhightemp)
+		if err != nil {
+			slog.Error("Failed to convert chanceofhightemp to integer", "hour.Chanceofhightemp", hour.Chanceofhightemp, "Error", err)
+			return
+		}
+		chanceofrain, err := strconv.Atoi(hour.Chanceofrain)
+		if err != nil {
+			slog.Error("Failed to convert chanceofrain to integer", "hour.Chanceofrain", hour.Chanceofrain, "Error", err)
+			return
+		}
+		chanceofsnow, err := strconv.Atoi(hour.Chanceofsnow)
+		if err != nil {
+			slog.Error("Failed to convert chanceofsnow to integer", "hour.Chanceofsnow", hour.Chanceofsnow, "Error", err)
+			return
+		}
+		chanceofthunder, err := strconv.Atoi(hour.Chanceofthunder)
+		if err != nil {
+			slog.Error("Failed to convert chanceofthunder to integer", "hour.Chanceofthunder", hour.Chanceofthunder, "Error", err)
+			return
+		}
+		chanceofwindy, err := strconv.Atoi(hour.Chanceofwindy)
+		if err != nil {
+			slog.Error("Failed to convert chanceofwindy to integer", "hour.Chanceofwindy", hour.Chanceofwindy, "Error", err)
+			return
+		}
+		if chanceoffog > 50 && chanceoffog > highestChanceOfFog {
+			highestChanceOfFog = chanceoffog
+		}
+		if chanceoffrost > 50 && chanceoffrost > highestChanceOfFrost {
+			highestChanceOfFrost = chanceoffrost
+		}
+		if chanceofhightemp > 50 && chanceofhightemp > highestChanceOfHighTemp {
+			highestChanceOfHighTemp = chanceofhightemp
+		}
+		if chanceofrain > 50 && chanceofrain > highestChanceOfRain {
+			highestChanceOfRain = chanceofrain
+		}
+		if chanceofsnow > 50 && chanceofsnow > highestChanceOfSnow {
+			highestChanceOfSnow = chanceofsnow
+		}
+		if chanceofthunder > 50 && chanceofthunder > highestChanceOfThunder {
+			highestChanceOfThunder = chanceofthunder
+		}
+		if chanceofwindy > 50 && chanceofwindy > highestChanceOfWindy {
+			highestChanceOfWindy = chanceofwindy
+		}
+	}
+	if highestChanceOfFog > 0 {
+		highChances += "🌫️ (" + strconv.Itoa(highestChanceOfFog) + "%) "
+	}
+	if highestChanceOfFrost > 0 {
+		highChances += "🥶 (" + strconv.Itoa(highestChanceOfFrost) + "%) "
+	}
+	if highestChanceOfHighTemp > 0 {
+		highChances += "🥵 (" + strconv.Itoa(highestChanceOfHighTemp) + "%) "
+	}
+	if highestChanceOfRain > 0 {
+		highChances += "🌧️ (" + strconv.Itoa(highestChanceOfRain) + "%) "
+	}
+	if highestChanceOfSnow > 0 {
+		highChances += "❄️ (" + strconv.Itoa(highestChanceOfSnow) + "%) "
+	}
+	if highestChanceOfThunder > 0 {
+		highChances += "⛈️ (" + strconv.Itoa(highestChanceOfThunder) + "%) "
+	}
+	if highestChanceOfWindy > 0 {
+		highChances += "💨 (" + strconv.Itoa(highestChanceOfWindy) + "%) "
+	}
+
+	if highChances != "" {
+		highChances = "⚠️ " + highChances
 	}
 
 	return
@@ -445,6 +543,11 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 			} else {
 				result += "\n" // Add newline if no rain but snow
 			}
+		}
+
+		highChances := checkForHighChances(day.Hourly)
+		if highChances != "" {
+			result += highChances + "\n"
 		}
 	}
 	result += "```"

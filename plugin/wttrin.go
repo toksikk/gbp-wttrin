@@ -366,9 +366,9 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 					result += " / "
 				}
 				result += fmt.Sprintf("🌧️ %.2fmm\n", averageRain)
+			} else {
+				result += "\n" // Add newline if no rain but snow
 			}
-		} else {
-			result += "\n" // Add newline if no rain but snow
 		}
 	}
 	result += "```"

@@ -271,19 +271,23 @@ func getWindDirectionEmoji(winddirDegreeString string) (windDirectionEmoji strin
 	return
 }
 
-func buildWeatherString(weatherResult wttrinResponse) (result string) {
-	weatherConditionEmoji := "🌈"
+func getWeatherConditionEmoji(weatherCode string) (weatherConditionEmoji string) {
+	weatherConditionEmoji = "🌈"
 	for code := range weatherCodes {
-		if weatherResult.CurrentCondition[0].WeatherCode == code {
+		if weatherCode == code {
 			weatherConditionEmoji = weatherCodes[code]
 			break
 		}
 	}
 
 	if weatherConditionEmoji == "🌈" {
-		slog.Warn("Unknown weather code", "Code", weatherResult.CurrentCondition[0].WeatherCode)
+		slog.Warn("Unknown weather code", "Code", weatherCode)
 	}
+	return
+}
 
+func buildWeatherString(weatherResult wttrinResponse) (result string) {
+	weatherConditionEmoji := getWeatherConditionEmoji(weatherResult.CurrentCondition[0].WeatherCode)
 	windDirectionEmoji, err := getWindDirectionEmoji(weatherResult.CurrentCondition[0].WinddirDegree)
 	if err != nil {
 		slog.Error("Failed to get wind direction emoji", "Error", err)
@@ -304,20 +308,9 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 }
 
 func buildForecastString(weatherResult wttrinResponse, forecastDayCount int) (result string) {
-
 	result += "```"
 	for _, day := range weatherResult.Weather {
-		weatherConditionEmoji := "🌈"
-		for code := range weatherCodes {
-			if day.Hourly[0].WeatherCode == code {
-				weatherConditionEmoji = weatherCodes[code]
-				break
-			}
-		}
-
-		if weatherConditionEmoji == "🌈" {
-			slog.Warn("Unknown weather code", "Code", day.Hourly[0].WeatherCode)
-		}
+		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
 			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"

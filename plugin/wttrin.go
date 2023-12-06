@@ -309,17 +309,36 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 		if i > 0 {
 			result += "---\n"
 		}
+
 		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
-		// TODO: calculate average wind direction for all hours in the day
-		windDirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
-		if err != nil {
-			slog.Error("Failed to convert wind direction to integer", "weatherResult.CurrentCondition[0].WinddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
-			return
+
+		avgWindDirDegree := 0
+		for _, hour := range day.Hourly {
+			windDirDegree, err := strconv.Atoi(hour.WinddirDegree)
+			if err != nil {
+				slog.Error("Failed to convert wind direction to integer", "hour.WinddirDegree", hour.WinddirDegree, "Error", err)
+				return
+			}
+			avgWindDirDegree += windDirDegree
 		}
-		windDirectionEmoji := getWindDirectionEmoji(windDirDegree)
+		avgWindDirDegree /= len(day.Hourly)
+
+		windDirectionEmoji := getWindDirectionEmoji(avgWindDirDegree)
+
+		avgWindspeedKmph := 0
+		for _, hour := range day.Hourly {
+			windspeedKmph, err := strconv.Atoi(hour.WindspeedKmph)
+			if err != nil {
+				slog.Error("Failed to convert wind speed to integer", "hour.WindspeedKmph", hour.WindspeedKmph, "Error", err)
+				return
+			}
+			avgWindspeedKmph += windspeedKmph
+		}
+		avgWindspeedKmph /= len(day.Hourly)
+
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
-			"🌬️ " + windDirectionEmoji + " " + day.Hourly[0].WindspeedKmph + "km/h\n" +
+			"🌬️ " + windDirectionEmoji + " " + strconv.Itoa(avgWindspeedKmph) + "km/h\n" +
 			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
 
 		totalSnow, err := strconv.ParseFloat(day.TotalSnowCm, 32)

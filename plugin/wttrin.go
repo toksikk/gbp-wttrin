@@ -198,25 +198,27 @@ func Start(discord *discordgo.Session) {
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := strings.Replace(m.ContentWithMentionsReplaced(), s.State.Ready.User.Username, "username", 1)
 	parts := strings.Split(msg, " ")
+	channel, err := s.State.Channel(m.ChannelID)
+	if channel == nil {
+		slog.Error("Failed to grab channel", "MessageID", m.ID, "ChannelID", m.ChannelID, "Error", err)
+		return
+	}
 
-	if strings.ToLower(parts[0]) == "!wttr" {
-		channel, err := s.State.Channel(m.ChannelID)
-		if channel == nil {
-			slog.Error("Failed to grab channel", "MessageID", m.ID, "ChannelID", m.ChannelID, "Error", err)
-			return
-		}
+	guild, err := s.State.Guild(channel.GuildID)
+	if guild == nil {
+		slog.Error("Failed to grab guild", "MessageID", m.ID, "Channel", channel, "GuildID", channel.GuildID, "Error", err)
+		return
+	}
 
-		guild, err := s.State.Guild(channel.GuildID)
-		if guild == nil {
-			slog.Error("Failed to grab guild", "MessageID", m.ID, "Channel", channel, "GuildID", channel.GuildID, "Error", err)
-			return
-		}
-
-		handleWttrQuery(s, m, parts, guild)
+	switch strings.ToLower(parts[0]) {
+	case "!wttr":
+		handleWttrQuery(s, m, parts, guild, 0)
+	case "!wttrf":
+		handleWttrQuery(s, m, parts, guild, 3) // always 3 day forecast for now
 	}
 }
 
-func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild) {
+func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild, forecast int) {
 	if len(parts) > 1 {
 		location := strings.Join(parts[1:], "+")
 		weatherResult, err := getWeather(location)
@@ -228,7 +230,14 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 			}
 			return
 		}
-		resultMessage := buildWeatherString(weatherResult)
+
+		var resultMessage string
+		if forecast > 0 {
+			resultMessage = buildForecastString(weatherResult, forecast)
+		} else {
+			resultMessage = buildWeatherString(weatherResult)
+		}
+
 		resultDiscordMessage, err := s.ChannelMessageSend(m.ChannelID, resultMessage)
 		if err != nil {
 			slog.Error("Failed to send message", "MessageID", resultDiscordMessage.ID, "ChannelID", resultDiscordMessage.ChannelID, "Error", err)
@@ -292,6 +301,29 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
 		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "```"
 	return r
+}
+
+func buildForecastString(weatherResult wttrinResponse, forecastDayCount int) (result string) {
+
+	result += "```"
+	for _, day := range weatherResult.Weather {
+		weatherConditionEmoji := "🌈"
+		for code := range weatherCodes {
+			if day.Hourly[0].WeatherCode == code {
+				weatherConditionEmoji = weatherCodes[code]
+				break
+			}
+		}
+
+		if weatherConditionEmoji == "🌈" {
+			slog.Warn("Unknown weather code", "Code", day.Hourly[0].WeatherCode)
+		}
+		result += "📅 " + day.Date + "\n" +
+			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
+			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
+	}
+	result += "```"
+	return
 }
 
 func getWeather(location string) (weatherResult wttrinResponse, err error) {

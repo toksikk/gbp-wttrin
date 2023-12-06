@@ -245,12 +245,7 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 	}
 }
 
-func getWindDirectionEmoji(winddirDegreeString string) (windDirectionEmoji string, err error) {
-	winddirDegree, err := strconv.Atoi(winddirDegreeString)
-	if err != nil {
-		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", winddirDegreeString, "Error", err)
-		return
-	}
+func getWindDirectionEmoji(winddirDegree int) (windDirectionEmoji string) {
 	if (winddirDegree >= 337 && winddirDegree <= 360) || (winddirDegree >= 0 && winddirDegree <= 22) {
 		windDirectionEmoji = "⬆️"
 	} else if winddirDegree >= 22 && winddirDegree <= 67 {
@@ -267,6 +262,14 @@ func getWindDirectionEmoji(winddirDegreeString string) (windDirectionEmoji strin
 		windDirectionEmoji = "⬅️"
 	} else if winddirDegree >= 292 && winddirDegree <= 337 {
 		windDirectionEmoji = "↖️"
+	}
+	return
+}
+
+func windDirDegreeStringToInt(winddirDegree string) (winddirDegreeInt int, err error) {
+	winddirDegreeInt, err = strconv.Atoi(winddirDegree)
+	if err != nil {
+		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", winddirDegree, "Error", err)
 	}
 	return
 }
@@ -288,11 +291,12 @@ func getWeatherConditionEmoji(weatherCode string) (weatherConditionEmoji string)
 
 func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	weatherConditionEmoji := getWeatherConditionEmoji(weatherResult.CurrentCondition[0].WeatherCode)
-	windDirectionEmoji, err := getWindDirectionEmoji(weatherResult.CurrentCondition[0].WinddirDegree)
+	windDirDegree, err := windDirDegreeStringToInt(weatherResult.CurrentCondition[0].WinddirDegree)
 	if err != nil {
-		slog.Error("Failed to get wind direction emoji", "Error", err)
+		slog.Error("Failed to convert wind direction to integer", "weatherResult.CurrentCondition[0].WinddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
 		return
 	}
+	windDirectionEmoji := getWindDirectionEmoji(windDirDegree)
 
 	var region string
 	if weatherResult.NearestArea[0].Region[0].Value != "" {
@@ -314,15 +318,18 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 			result += "---\n"
 		}
 		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
-		windDirectionEmoji, err := getWindDirectionEmoji(day.Hourly[0].WinddirDegree)
+		// TODO: calculate average wind direction for all hours in the day
+		windDirDegree, err := windDirDegreeStringToInt(weatherResult.CurrentCondition[0].WinddirDegree)
 		if err != nil {
-			slog.Error("Failed to get wind direction emoji", "Error", err)
+			slog.Error("Failed to convert wind direction to integer", "weatherResult.CurrentCondition[0].WinddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
 			return
 		}
+		windDirectionEmoji := getWindDirectionEmoji(windDirDegree)
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
 			"🌬️ " + windDirectionEmoji + " " + day.Hourly[0].WindspeedKmph + "km/h\n" +
 			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
+
 		totalSnow, err := strconv.ParseFloat(day.TotalSnowCm, 32)
 		if err != nil {
 			slog.Warn("Failed to parse total snow", "TotalSnowCm", day.TotalSnowCm, "Error", err)

@@ -309,11 +309,23 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 
 func buildForecastString(weatherResult wttrinResponse, forecastDayCount int) (result string) {
 	result += "```"
-	for _, day := range weatherResult.Weather {
+	for i, day := range weatherResult.Weather {
+		if i > 0 {
+			result += "---\n"
+		}
 		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
 			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
+		totalSnow, err := strconv.ParseFloat(day.TotalSnowCm, 32)
+		if err != nil {
+			slog.Warn("Failed to parse total snow", "TotalSnowCm", day.TotalSnowCm, "Error", err)
+		} else {
+			if totalSnow > 0.0 {
+				result += "❄️ " + day.TotalSnowCm + " cm\n"
+			}
+		}
+
 	}
 	result += "```"
 	return

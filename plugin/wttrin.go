@@ -443,25 +443,25 @@ func checkForHighChances(hourly []Hourly) (highChances string) {
 		}
 	}
 	if highestChanceOfFog > 0 {
-		highChances += "🌫️ (" + strconv.Itoa(highestChanceOfFog) + "%) "
+		highChances += "🌫️ " + strconv.Itoa(highestChanceOfFog) + "% "
 	}
 	if highestChanceOfFrost > 0 {
-		highChances += "🥶 (" + strconv.Itoa(highestChanceOfFrost) + "%) "
+		highChances += "🥶 " + strconv.Itoa(highestChanceOfFrost) + "% "
 	}
 	if highestChanceOfHighTemp > 0 {
-		highChances += "🥵 (" + strconv.Itoa(highestChanceOfHighTemp) + "%) "
+		highChances += "🥵 " + strconv.Itoa(highestChanceOfHighTemp) + "% "
 	}
 	if highestChanceOfRain > 0 {
-		highChances += "🌧️ (" + strconv.Itoa(highestChanceOfRain) + "%) "
+		highChances += "🌧️ " + strconv.Itoa(highestChanceOfRain) + "% "
 	}
 	if highestChanceOfSnow > 0 {
-		highChances += "❄️ (" + strconv.Itoa(highestChanceOfSnow) + "%) "
+		highChances += "❄️ " + strconv.Itoa(highestChanceOfSnow) + "% "
 	}
 	if highestChanceOfThunder > 0 {
-		highChances += "⛈️ (" + strconv.Itoa(highestChanceOfThunder) + "%) "
+		highChances += "⛈️ " + strconv.Itoa(highestChanceOfThunder) + "% "
 	}
 	if highestChanceOfWindy > 0 {
-		highChances += "💨 (" + strconv.Itoa(highestChanceOfWindy) + "%) "
+		highChances += "💨 " + strconv.Itoa(highestChanceOfWindy) + "% "
 	}
 
 	if highChances != "" {

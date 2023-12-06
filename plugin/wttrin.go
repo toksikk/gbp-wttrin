@@ -236,26 +236,12 @@ func handleWttrQuery(s *discordgo.Session, m *discordgo.MessageCreate, parts []s
 	}
 }
 
-func buildWeatherString(weatherResult wttrinResponse) (result string) {
-	weatherConditionEmoji := "🌈"
-	for code := range weatherCodes {
-		if weatherResult.CurrentCondition[0].WeatherCode == code {
-			weatherConditionEmoji = weatherCodes[code]
-			break
-		}
-	}
-
-	if weatherConditionEmoji == "🌈" {
-		slog.Warn("Unknown weather code", "Code", weatherResult.CurrentCondition[0].WeatherCode)
-	}
-
-	winddirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
+func getWindDirectionEmoji(winddirDegreeString string) (windDirectionEmoji string, err error) {
+	winddirDegree, err := strconv.Atoi(winddirDegreeString)
 	if err != nil {
-		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", weatherResult.CurrentCondition[0].WinddirDegree, "Error", err)
+		slog.Error("Failed to convert winddirDegree to int", "winddirDegree", winddirDegreeString, "Error", err)
 		return
 	}
-
-	var windDirectionEmoji string
 	if (winddirDegree >= 337 && winddirDegree <= 360) || (winddirDegree >= 0 && winddirDegree <= 22) {
 		windDirectionEmoji = "⬆️"
 	} else if winddirDegree >= 22 && winddirDegree <= 67 {
@@ -272,6 +258,27 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 		windDirectionEmoji = "⬅️"
 	} else if winddirDegree >= 292 && winddirDegree <= 337 {
 		windDirectionEmoji = "↖️"
+	}
+	return
+}
+
+func buildWeatherString(weatherResult wttrinResponse) (result string) {
+	weatherConditionEmoji := "🌈"
+	for code := range weatherCodes {
+		if weatherResult.CurrentCondition[0].WeatherCode == code {
+			weatherConditionEmoji = weatherCodes[code]
+			break
+		}
+	}
+
+	if weatherConditionEmoji == "🌈" {
+		slog.Warn("Unknown weather code", "Code", weatherResult.CurrentCondition[0].WeatherCode)
+	}
+
+	windDirectionEmoji, err := getWindDirectionEmoji(weatherResult.CurrentCondition[0].WinddirDegree)
+	if err != nil {
+		slog.Error("Failed to get wind direction emoji", "Error", err)
+		return
 	}
 
 	var region string

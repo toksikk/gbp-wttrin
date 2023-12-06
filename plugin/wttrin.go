@@ -314,15 +314,21 @@ func buildForecastString(weatherResult wttrinResponse, forecastDayCount int) (re
 			result += "---\n"
 		}
 		weatherConditionEmoji := getWeatherConditionEmoji(day.Hourly[0].WeatherCode)
+		windDirectionEmoji, err := getWindDirectionEmoji(day.Hourly[0].WinddirDegree)
+		if err != nil {
+			slog.Error("Failed to get wind direction emoji", "Error", err)
+			return
+		}
 		result += "📅 " + day.Date + "\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
+			"🌬️ " + windDirectionEmoji + " " + day.Hourly[0].WindspeedKmph + "km/h\n" +
 			weatherConditionEmoji + " " + day.Hourly[0].WeatherDesc[0].Value + "\n"
 		totalSnow, err := strconv.ParseFloat(day.TotalSnowCm, 32)
 		if err != nil {
 			slog.Warn("Failed to parse total snow", "TotalSnowCm", day.TotalSnowCm, "Error", err)
 		} else {
 			if totalSnow > 0.0 {
-				result += "❄️ " + day.TotalSnowCm + " cm\n"
+				result += "❄️ " + day.TotalSnowCm + "cm\n"
 			}
 		}
 

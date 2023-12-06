@@ -335,10 +335,30 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 			slog.Warn("Failed to parse total snow", "TotalSnowCm", day.TotalSnowCm, "Error", err)
 		} else {
 			if totalSnow > 0.0 {
-				result += "❄️ " + day.TotalSnowCm + "cm\n"
+				result += "❄️ " + day.TotalSnowCm + "cm"
 			}
 		}
 
+		totalRain := 0.0
+		for _, hour := range day.Hourly {
+			rain, err := strconv.ParseFloat(hour.PrecipMM, 32)
+			if err != nil {
+				slog.Warn("Failed to parse total rain", "PrecipMM", hour.PrecipMM, "Error", err)
+			}
+			totalRain += rain
+		}
+
+		if totalRain > 0.0 {
+			averageRain := totalRain / float64(len(day.Hourly))
+			if averageRain > 0.0 {
+				if totalSnow > 0.0 {
+					result += " / "
+				}
+				result += fmt.Sprintf("🌧️ %.2fmm\n", averageRain)
+			}
+		} else {
+			result += "\n" // Add newline if no rain but snow
+		}
 	}
 	result += "```"
 	return

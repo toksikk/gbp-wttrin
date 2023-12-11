@@ -348,11 +348,11 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
 	}
 
-	r := "```📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n" +
+	r := "## 📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n```\n" +
 		"🌡️ " + weatherResult.CurrentCondition[0].TempC + "°C (feels like " + weatherResult.CurrentCondition[0].FeelsLikeC + "°C)\n" +
 		"💧 " + weatherResult.CurrentCondition[0].Humidity + "% humidity\n" +
 		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
-		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "\n" + checkForHighChances(weatherResult.Weather[0].Hourly) + "```"
+		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "\n" + checkForHighChances(weatherResult.Weather[0].Hourly) + "\n```"
 	return r
 }
 
@@ -472,15 +472,14 @@ func checkForHighChances(hourly []Hourly) (highChances string) {
 }
 
 func buildForecastString(weatherResult wttrinResponse) (result string) {
-	result += "```"
 	var region string
 	if weatherResult.NearestArea[0].Region[0].Value != "" {
 		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
 	}
-	result += "📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n---\n"
+	result += "## 📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n"
 	for i, day := range weatherResult.Weather {
 		if i > 0 {
-			result += "---\n"
+			result += "```\n"
 		}
 
 		weatherCode := mostOccurringWeatherCode(weatherResult)
@@ -510,7 +509,7 @@ func buildForecastString(weatherResult wttrinResponse) (result string) {
 		}
 		avgWindspeedKmph /= len(day.Hourly)
 
-		result += "📅 " + day.Date + "\n" +
+		result += "### 📅 " + day.Date + "\n```\n" +
 			"🌡️ " + day.MaxtempC + "°C / " + day.MintempC + "°C\n" +
 			"🌬️ " + windDirectionEmoji + " " + strconv.Itoa(avgWindspeedKmph) + "km/h\n" +
 			weatherConditionEmoji + " " + weatherDescriptions[weatherCode] + "\n"

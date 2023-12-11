@@ -334,6 +334,15 @@ func getWeatherConditionEmoji(weatherCode string) (weatherConditionEmoji string)
 	return
 }
 
+func addLocationToString(weatherResult wttrinResponse) (r string) {
+	var region string
+	if weatherResult.NearestArea[0].Region[0].Value != "" {
+		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
+	}
+	r += "## 📍 [" + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "](<https://www.google.com/maps/place/" + weatherResult.NearestArea[0].Latitude + "," + weatherResult.NearestArea[0].Longitude + ">)\n"
+	return
+}
+
 func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	weatherConditionEmoji := getWeatherConditionEmoji(weatherResult.CurrentCondition[0].WeatherCode)
 	windDirDegree, err := strconv.Atoi(weatherResult.CurrentCondition[0].WinddirDegree)
@@ -343,17 +352,14 @@ func buildWeatherString(weatherResult wttrinResponse) (result string) {
 	}
 	windDirectionEmoji := getWindDirectionEmoji(windDirDegree)
 
-	var region string
-	if weatherResult.NearestArea[0].Region[0].Value != "" {
-		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
-	}
+	result += addLocationToString(weatherResult)
 
-	r := "## 📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n```\n" +
+	result += "```\n" +
 		"🌡️ " + weatherResult.CurrentCondition[0].TempC + "°C (feels like " + weatherResult.CurrentCondition[0].FeelsLikeC + "°C)\n" +
 		"💧 " + weatherResult.CurrentCondition[0].Humidity + "% humidity\n" +
 		"🌬️ " + windDirectionEmoji + " " + weatherResult.CurrentCondition[0].WindspeedKmph + "km/h\n" +
 		weatherConditionEmoji + " " + weatherResult.CurrentCondition[0].WeatherDesc[0].Value + "\n" + checkForHighChances(weatherResult.Weather[0].Hourly) + "\n```"
-	return r
+	return
 }
 
 func mostOccurringWeatherCode(resp wttrinResponse) (mostOccurringCode string) {
@@ -472,11 +478,7 @@ func checkForHighChances(hourly []Hourly) (highChances string) {
 }
 
 func buildForecastString(weatherResult wttrinResponse) (result string) {
-	var region string
-	if weatherResult.NearestArea[0].Region[0].Value != "" {
-		region = "(" + weatherResult.NearestArea[0].Region[0].Value + ")"
-	}
-	result += "## 📍 " + weatherResult.NearestArea[0].AreaName[0].Value + ", " + weatherResult.NearestArea[0].Country[0].Value + " " + region + "\n"
+	result += addLocationToString(weatherResult)
 	for i, day := range weatherResult.Weather {
 		if i > 0 {
 			result += "```\n"

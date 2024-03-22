@@ -1,13 +1,20 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: https://github.com/tekwizely/pre-commit-golang
-    rev: v0.8.3
-    hooks:
-      - id: go-fmt
-      - id: go-lint
-      - id: golangci-lint
+- hooks:
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+  repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+- hooks:
+  - id: go-fmt
+  - id: go-lint
+  - id: golangci-lint
+  repo: https://github.com/tekwizely/pre-commit-golang
+  rev: v0.8.3
+- hooks:
+  - id: commitizen
+  - id: commitizen-branch
+    stages:
+    - push
+  repo: https://github.com/commitizen-tools/commitizen
+  rev: v3.20.0

@@ -124,7 +124,7 @@ var weatherDescriptions = map[string]string{
 	"395": "Heavy Snow Showers",
 }
 
-type Hourly struct {
+type hourly struct {
 	DewPointC        string `json:"DewPointC"`
 	DewPointF        string `json:"DewPointF"`
 	FeelsLikeC       string `json:"FeelsLikeC"`
@@ -232,7 +232,7 @@ type wttrinResponse struct {
 		AvgtempC    string   `json:"avgtempC"`
 		AvgtempF    string   `json:"avgtempF"`
 		Date        string   `json:"date"`
-		Hourly      []Hourly `json:"hourly"`
+		Hourly      []hourly `json:"hourly"`
 		MaxtempC    string   `json:"maxtempC"`
 		MaxtempF    string   `json:"maxtempF"`
 		MintempC    string   `json:"mintempC"`
@@ -383,7 +383,7 @@ func mostOccurringWeatherCode(resp wttrinResponse) (mostOccurringCode string) {
 	return
 }
 
-func checkForHighChances(hourly []Hourly) (highChances string) {
+func checkForHighChances(hourly []hourly) (highChances string) {
 	highestChanceOfFog := 0
 	highestChanceOfFrost := 0
 	highestChanceOfHighTemp := 0
@@ -578,7 +578,7 @@ func httpGet(url string) (weatherResult wttrinResponse, err error) {
 
 	if resp.StatusCode == http.StatusNotFound {
 		slog.Info("Could not find requested location", "URL", url, "StatusCode", resp.StatusCode)
-		err = fmt.Errorf(resp.Status)
+		err = fmt.Errorf("%s", resp.Status)
 		return
 	}
 
